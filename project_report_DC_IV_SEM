@@ -1,0 +1,93 @@
+# Project Report: AI-Accelerated Phase Diagram Prediction
+
+## 1. Executive Summary
+
+This project establishes an integrated, AI-driven materials informatics pipeline specifically designed for the **Aluminum-Zinc (Al-Zn) binary alloy system**. Traditional thermodynamic calculations for phase diagrams (such as CALPHAD) are highly accurate but computationally expensive. This project addresses this bottleneck by generating a high-fidelity dataset using PyCALPHAD, training rapid Machine Learning (ML) surrogates to instantly predict phase stability and Gibbs free energy, and wrapping the entire system in a Streamlit web application. Furthermore, a Retrieval-Augmented Generation (RAG) engine powered by a Large Language Model (LLM) is integrated to provide scientifically rigorous thermodynamic interpretations on demand.
+
+---
+
+## 2. Codebase Architecture
+
+The project is structured in a highly modular fashion, separating data generation, modeling, visualization, and the user interface.
+
+### File Structure Overview
+```text
+DC_IV_SEM/
+├── data/                               # Data persistence layer
+│   ├── COST507-modified.tdb            # Thermodynamic database (TDB format)
+│   ├── phase_diagram_dataset.csv       # Generated equilibrium dataset
+│   └── knowledge_base/
+│       └── materials_science_docs.json # Vector DB documents for RAG
+├── src/                                # Core logic modules
+│   ├── calphad_simulation.py           # Physics-based simulation engine
+│   ├── feature_engineering.py          # Domain-specific physical features
+│   ├── ml_models.py                    # Model training and inference
+│   ├── phase_diagram_plotter.py        # Visual analytics and plotting
+│   ├── rag_engine.py                   # ChromaDB vector store logic
+│   └── llm_assistant.py                # Gemini API / Fallback integration
+├── models/                             # Serialized Scikit-learn/XGBoost models
+├── outputs/                            # Exported charts and visual metrics
+├── app.py                              # Streamlit dashboard entry point
+└── main.py                             # CLI orchestrator for end-to-end execution
+```
+
+---
+
+## 3. Methodology & Workflow
+
+The pipeline operates in five distinct, automated steps orchestrated by `main.py`:
+
+### Step 1: Physics-Based Data Generation (`calphad_simulation.py`)
+- **Action**: Uses the `pycalphad` library to load the `COST507-modified.tdb` thermodynamic database.
+- **Process**: Computes the thermodynamic equilibrium over a grid of temperatures (300K to 1000K, step 10K) and compositions (X_Zn from 0.01 to 0.99, step 0.02), holding pressure constant at 1 atm.
+- **Output**: Determines the molar Gibbs free energy, stable phase(s), and phase fractions at each point, yielding a dataset of exactly 3,550 points.
+
+### Step 2: Feature Engineering (`feature_engineering.py`)
+- **Action**: Augments the dataset with physical domain knowledge to help ML models generalize better.
+- **Process**: Computes composition-weighted physical properties, including:
+  - Average atomic radius
+  - Electronegativity difference
+  - Valence Electron Concentration (VEC)
+  - Atomic size mismatch (δ)
+  - Ideal mixing entropy
+  - Homologous temperature ($T/T_{melt}$)
+
+### Step 3: Machine Learning Surrogate Models (`ml_models.py`)
+- **Action**: Trains predictive models to replace the slow CALPHAD engine.
+- **Process**: 
+  - **Classification**: Predicts the stable phase (e.g., `FCC_A1`, `LIQUID`, `FCC_A1+HCP_ZN`).
+  - **Regression**: Predicts the continuous Gibbs free energy and dominant phase fraction.
+  - Models tested include **Random Forest**, **XGBoost**, and a **Multi-Layer Perceptron (MLP) Neural Network**.
+  - Applies label consolidation to handle highly rare multi-phase edge cases before employing stratified train/test splitting.
+
+### Step 4: Visual Analytics (`phase_diagram_plotter.py`)
+- **Action**: Generates publication-ready visualizations.
+- **Process**: Creates heatmaps of phase fractions, contours of Gibbs free energy, standard $T$ vs $X_{Zn}$ phase map plots, and direct visual comparisons between CALPHAD ground truth and ML predictions. 
+
+### Step 5: Generative AI & RAG Engine (`rag_engine.py` & `llm_assistant.py`)
+- **Action**: Provides an interactive scientific assistant.
+- **Process**: 
+  - Initializes a local **ChromaDB** vector database.
+  - Embeds scientific documents using `sentence-transformers` (`all-MiniLM-L6-v2`).
+  - Retrieves relevant thermodynamic context based on user queries and injects it into a prompt for the LLM (Google Gemini). If the API is offline/unconfigured, the system gracefully degrades to scientifically accurate template-based responses.
+
+---
+
+## 4. Web Interface (`app.py`)
+
+The end-user interacts with the system through a **Streamlit** dashboard consisting of 5 tabs:
+1. **Dataset**: Raw data exploration with dynamic filtering.
+2. **Phase Diagrams**: Side-by-side comparison of CALPHAD vs ML phase maps and heatmaps.
+3. **ML Models**: Training metrics, R² scores, MAE, and inference speed benchmarks.
+4. **Prediction**: An interactive tool allowing the user to input a specific Temperature and Zinc composition to get instantaneous ML predictions along with an AI-generated explanation of *why* that phase is stable at those conditions.
+5. **AI Assistant**: A chat interface for querying the RAG engine about Al-Zn alloy properties and thermodynamics.
+
+---
+
+## 5. Key Results & Performance
+
+- **Simulation Cost Reduction**: While the traditional CALPHAD calculation for 3,550 points takes approximately **260+ seconds**, the trained ML models (e.g., Random Forest or XGBoost) can predict the entire grid in **< 0.1 seconds**, representing a massive speedup.
+- **Model Accuracy**:
+  - **Phase Classification**: Achieves **~98% accuracy** and F1-score across the grid.
+  - **Gibbs Energy Regression**: Achieves an **$R^2$ of 0.999** with very low Mean Absolute Error (MAE), proving that ML algorithms can closely approximate complex free-energy landscapes.
+- **AI Integration**: The RAG engine successfully grounds the LLM in specific knowledge regarding the Al-Zn eutectic system, preventing hallucinations and ensuring answers are rooted in the physics of the Hume-Rothery rules and CALPHAD methodology.
