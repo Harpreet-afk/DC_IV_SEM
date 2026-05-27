@@ -1,6 +1,6 @@
 # AI-Accelerated Phase Diagram Prediction with LLM-Based Scientific Assistant
 
-## Binary Alloy System: Al–Zn
+## Binary Alloy System: Al–Zn (PyCALPHAD • ML • RAG • LLMs)
 
 This project presents an integrated Materials Informatics Pipeline combining CALPHAD thermodynamic simulations, Machine Learning models, and a Large Language Model (LLM)-based scientific assistant for rapid prediction and interpretation of phase stability in binary alloy systems.
 
