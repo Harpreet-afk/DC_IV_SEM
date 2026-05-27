@@ -2,7 +2,15 @@
 
 ## Binary Alloy System: Al–Zn
 
-An integrated AI-driven materials informatics pipeline combining CALPHAD thermodynamic simulations, machine learning models, and an LLM-based scientific assistant to predict, analyze, and explain phase stability in the Al–Zn binary alloy system.
+This project presents an integrated Materials Informatics Pipeline combining CALPHAD thermodynamic simulations, Machine Learning models, and a Large Language Model (LLM)-based scientific assistant for rapid prediction and interpretation of phase stability in binary alloy systems.
+
+The system uses pycalphad to generate thermodynamic equilibrium datasets from TDB databases, which are then used to train ML models capable of predicting stable phases, phase fractions, and Gibbs free energy significantly faster than traditional CALPHAD calculations.
+
+An LLM-powered assistant is integrated to:
+
+Explain phase stability using thermodynamic reasoning
+Interpret phase diagrams
+Retrieve and summarize scientific insights from materials science literature using Retrieval-Augmented Generation (RAG)
 
 Main Pipeline Runner
 
@@ -13,38 +21,40 @@ Runs the complete AI-Accelerated Phase Diagram Prediction pipeline:
 4. Generate phase diagram visualizations
 5. Demo LLM assistant
 
-
-## Project Structure
-DC_IV_SEM/
-├── data/
-│   ├── COST507-modified.tdb              # Thermodynamic database
-│   ├── phase_diagram_dataset.csv         # Generated dataset (auto-created)
-│   └── knowledge_base/
-│       └── materials_science_docs.json   # RAG knowledge base
-├── src/
-│   ├── calphad_simulation.py             # PyCALPHAD dataset generation
-│   ├── feature_engineering.py            # Physical property features
-│   ├── ml_models.py                      # ML training & prediction
-│   ├── phase_diagram_plotter.py          # Visualization module
-│   ├── rag_engine.py                     # RAG with ChromaDB
-│   └── llm_assistant.py                  # LLM scientific assistant
-├── models/                               # Saved trained models (auto-created)
-├── outputs/                              # Generated plots (auto-created)
-├── app.py                                # Streamlit web app
-├── main.py                               # CLI pipeline runner
-├── requirements.txt                      # Dependencies
-└── README.md                             # This file
-
-### Run Full Pipeline (CLI)
-
-This will:
-1. Generate CALPHAD equilibrium dataset (~3,500 points)
-2. Compute engineered features
-3. Train ML models (RF, XGBoost, MLP)
-4. Generate phase diagram visualizations
-5. Demo the LLM assistant
-
-### Launch Web Interface
+## Pipeline Structure
+User Input (Temperature + Composition)
+                    │
+                    ▼
+        ┌────────────────────┐
+        │    PyCALPHAD       │
+        │ Thermodynamic Calc │
+        └────────────────────┘
+                    │
+                    ▼
+        Generated Thermodynamic Dataset
+                    │
+                    ▼
+        ┌────────────────────┐
+        │  Feature Engineering│
+        └────────────────────┘
+                    │
+                    ▼
+        ┌────────────────────┐
+        │   ML Models        │
+        │ RF / XGBoost / MLP │
+        └────────────────────┘
+                    │
+                    ▼
+      Phase / Gibbs Energy Prediction
+                    │
+                    ▼
+        ┌────────────────────┐
+        │   LLM Assistant    │
+        └────────────────────┘
+                    │
+     ┌──────────────┼──────────────┐
+     ▼                              ▼
+Phase Explanation         Literature-Grounded Reasoning
 
 ## Dataset
 
@@ -65,20 +75,37 @@ The dataset is generated for the Al-Zn binary system using PyCALPHAD:
 | mixing_entropy | Ideal entropy of mixing (J/mol·K) |
 | homologous_temperature | Normalized temperature T/T_m |
 
-## Machine Learning Tasks
+## LLM Assistant Features
+The integrated LLM assistant can:
+Explain stable phase formation using Gibbs free energy trends
+Interpret binary phase diagrams
+Provide thermodynamic reasoning for alloy behavior
+Retrieve literature-supported explanations using RAG pipelines
 
-### Classification
-Predict stable phase: FCC_A1, HCP_ZN, LIQUID, or multi-phase
+## Technologies Used
+**Core Technologies**
+Thermodynamic Simulation
+   1. pycalphad
+   2. TDB databases
+**Machine Learning**
+   1. Scikit-learn
+   2. XGBoost
+   3. PyTorch / TensorFlow
+**Data Processing**
+   1. NumPy
+   2. Pandas
+   3. Matplotlib
+   4. Plotly
+**LLM + RAG**
+   1. LangChain
+   2. FAISS
+   3. OpenAI / Llama Models
+**Deployment / Interface**
+   Streamlit
 
-### Regression
-Predict: Gibbs free energy (J/mol) and Phase fraction
-
-### Speed Benchmark
-ML prediction time << CALPHAD simulation time
-
-## LLM Assistant Functions
-
-1. Phase Explanation — Why a phase is stable at given T, X
-2. Diagram Interpretation — Describe regions, boundaries, trends
-3. RAG Q&A — Answer questions grounded in scientific literature
+## References
+PyCALPHAD Documentation
+CALPHAD Methodology
+Materials Informatics Literature
+Scientific LLM and RAG Research Papers
 
